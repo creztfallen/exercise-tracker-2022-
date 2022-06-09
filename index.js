@@ -31,20 +31,21 @@ let exSchema = new mongoose.Schema({
 
 let userSchema = new mongoose.Schema({
   username: { type: String, required: true },
-  log: [],
+  log: [exSchema],
+  count: { type: Number },
 });
 
 exSchema.methods.toJSON = function () {
   var obj = this.toObject();
-  delete obj._id;
+  // delete obj._id;
   delete obj.__v;
   return obj;
 };
 
 userSchema.methods.toJSON = function () {
   var obj = this.toObject();
-  delete obj.log;
   delete obj.__v;
+
   return obj;
 };
 
@@ -78,15 +79,16 @@ app.get("/api/users", (req, res) => {
 
 app.post("/api/users/:_id/exercises", async (req, res) => {
   const { description, duration, date } = req.body;
+  const isValidDate = date
+    ? new Date(date).toDateString()
+    : new Date().toDateString();
   let exercise = new Exercise({
     description: description,
     duration: duration,
-    date: new Date(date).toDateString(),
+    date: isValidDate,
   });
 
-  if (exercise.date === "") {
-    exercise.date = new Date().toDateString();
-  }
+  await exercise.save();
 
   let user = User.findByIdAndUpdate(
     req.params._id,
@@ -94,13 +96,21 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
     { new: true }
   ).then((result) => {
     let resObj = {};
-    resObj["_id"] = result._id;
+    resObj["_id"] = exercise._id;
     resObj["username"] = result.username;
-    resObj["date"] = new Date(exercise.date).toDateString();
+    resObj["date"] = exercise.date;
     resObj["duration"] = exercise.duration;
     resObj["description"] = exercise.description;
 
     res.json(resObj);
+  });
+});
+
+app.post("/api/users/:_id/logs");
+
+app.get("/api/users/:_id/logs", (req, res) => {
+  User.findById(req.params._id).then((result) => {
+    res.json(result);
   });
 });
 //----------------------------------------------------------------------------//
