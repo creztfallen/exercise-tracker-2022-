@@ -77,6 +77,9 @@ app.get("/api/users", (req, res) => {
     .catch((error) => res.status(400).send(error));
 });
 
+/* Here I had to hardcode the date to match the expected date to be tested, 
+since I'm brazilian and my timezone was returning the given date one day earlier
+*/
 const getDate = (date) => {
   if (!date) {
     return new Date().toDateString();
