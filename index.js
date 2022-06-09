@@ -77,15 +77,26 @@ app.get("/api/users", (req, res) => {
     .catch((error) => res.status(400).send(error));
 });
 
+const getDate = (date) => {
+  if (!date) {
+    return new Date().toDateString();
+  }
+  const correctDate = new Date();
+  const dateString = date.split("-");
+  correctDate.setFullYear(dateString[0]);
+  correctDate.setDate(dateString[2]);
+  correctDate.setMonth(dateString[1] - 1);
+
+  return correctDate.toDateString();
+};
+
 app.post("/api/users/:_id/exercises", async (req, res) => {
   const { description, duration, date } = req.body;
-  const isValidDate = date
-    ? new Date(date).toDateString()
-    : new Date().toDateString();
+
   let exercise = new Exercise({
     description: description,
     duration: duration,
-    date: isValidDate,
+    date: getDate(date),
   });
 
   await exercise.save();
@@ -96,7 +107,7 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
     { new: true }
   ).then((result) => {
     let resObj = {};
-    resObj["_id"] = exercise._id;
+    resObj["_id"] = result._id;
     resObj["username"] = result.username;
     resObj["date"] = exercise.date;
     resObj["duration"] = exercise.duration;
