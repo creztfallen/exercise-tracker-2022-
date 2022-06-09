@@ -35,9 +35,30 @@ let userSchema = new mongoose.Schema({
 });
 
 let User = mongoose.model("User", userSchema);
-let Exercise = mongoose.model("Exercise", exerciseSchema);
+let Exercise = mongoose.model("Exercise", exSchema);
 //----------------------------------------------------------------------------//
 
+//--------------------------Creating Routes------------------------------------//
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/views/index.html");
 });
+
+app.post("/api/users", async (req, res) => {
+  const { username } = req.body;
+  let user = await User.findOne({ username: req.body.username });
+  if (!user) {
+    user = new User({ username: username });
+    await user.save();
+
+    res.status(200).json(user);
+  } else {
+    res.status(400).send("This user already exists.");
+  }
+});
+
+app.get("/api/users", (req, res) => {
+  let user = User.find()
+    .then((result) => res.status(200).json(result))
+    .catch((error) => res.status(400).send(error));
+});
+//----------------------------------------------------------------------------//
