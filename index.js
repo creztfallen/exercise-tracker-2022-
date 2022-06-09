@@ -23,7 +23,19 @@ let uri = process.env.URI;
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 //--------------------------Creating Models------------------------------------//
+let exSchema = new mongoose.Schema({
+  description: { type: String, required: true },
+  duration: { type: Number, required: true },
+  date: String,
+});
 
+let userSchema = new mongoose.Schema({
+  username: { type: String, required: true },
+  log: [exSchema],
+});
+
+let User = mongoose.model("User", userSchema);
+let Exercise = mongoose.model("Exercise", exerciseSchema);
 //----------------------------------------------------------------------------//
 
 app.get("/", (req, res) => {
