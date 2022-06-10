@@ -35,20 +35,6 @@ let userSchema = new mongoose.Schema({
   count: { type: Number },
 });
 
-exSchema.methods.toJSON = function () {
-  var obj = this.toObject();
-  // delete obj._id;
-  delete obj.__v;
-  return obj;
-};
-
-userSchema.methods.toJSON = function () {
-  var obj = this.toObject();
-  delete obj.__v;
-
-  return obj;
-};
-
 let User = mongoose.model("User", userSchema);
 let Exercise = mongoose.model("Exercise", exSchema);
 //----------------------------------------------------------------------------//
@@ -120,11 +106,37 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
   });
 });
 
-app.post("/api/users/:_id/logs");
-
 app.get("/api/users/:_id/logs", (req, res) => {
   User.findById(req.params._id).then((result) => {
-    res.json(result);
+    let resObj = result;
+
+    if (req.query.from || req.query.to) {
+      let fromDate = new Date(0);
+      let toDate = new Date();
+
+      if (req.query.from) {
+        fromDate = new Date(req.query.from);
+      }
+
+      if (req.query.to) {
+        toDate = new Date(req.query.to);
+      }
+
+      fromDate = fromDate.getTime();
+      toDate = toDate.getTime();
+
+      resObj.log = resObj.log.filter((session) => {
+        let sessionDate = new Date(session.date).getTime();
+        return sessionDate >= fromDate && sessionDate <= toDate;
+      });
+    }
+    if (req.query.limit) {
+      resObj.log = resObj.log.slice(0, req.query.limit);
+    }
+
+    resObj["count"] = result.log.length;
+    res.json(resObj);
   });
 });
+
 //----------------------------------------------------------------------------//
